@@ -1,0 +1,9 @@
+{"type":"server-started","port":65432,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:65432","screen_dir":"/Users/hohung/github.com/custom-vim-color-themes/.superpowers/brainstorm/17141-1781584088/content","state_dir":"/Users/hohung/github.com/custom-vim-color-themes/.superpowers/brainstorm/17141-1781584088/state"}
+{"type":"screen-added","file":"/Users/hohung/github.com/custom-vim-color-themes/.superpowers/brainstorm/17141-1781584088/content/layout.html"}
+{"source":"user-event","type":"click","text":"A\n    Side panel + previewPalette swatches on the left, code preview on the right. Everything visible at once.","choice":"a","id":null,"timestamp":1781584485720}
+{"source":"user-event","type":"click","text":"A\n    Side panel + previewPalette swatches on the left, code preview on the right. Everything visible at once.","choice":"a","id":null,"timestamp":1781584486352}
+{"source":"user-event","type":"click","text":"B\n    Top controls, big previewColor controls across the top, large code preview fills the rest. More room to read the preview.","choice":"b","id":null,"timestamp":1781584502769}
+{"source":"user-event","type":"click","text":"A\n    Side panel + previewPalette swatches on the left, code preview on the right. Everything visible at once.","choice":"a","id":null,"timestamp":1781584503385}
+{"type":"screen-added","file":"/Users/hohung/github.com/custom-vim-color-themes/.superpowers/brainstorm/17141-1781584088/content/waiting.html"}
+{"type":"screen-added","file":"/Users/hohung/github.com/custom-vim-color-themes/.superpowers/brainstorm/17141-1781584088/content/studio.html"}
+{"type":"server-stopped","reason":"idle timeout"}

@@ -1,0 +1,61 @@
+<h2>Which layout for the theme editor?</h2>
+<p class="subtitle">Both have a live code preview that recolors instantly as you change colors. Pick the arrangement that feels right.</p>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">A — Side panel + preview</div>
+    <div class="mockup-body" style="background:#1e1e2e;color:#cdd6f4;font-family:monospace;padding:0">
+      <div style="display:flex;gap:8px;padding:8px;background:#181825;font-size:11px;color:#a6adc8">
+        <span>Preset: Tokyo ▾</span><span style="margin-left:auto">⬇ Copy Lua</span>
+      </div>
+      <div style="display:flex;min-height:200px">
+        <div style="width:120px;background:#181825;padding:8px;font-size:10px;line-height:1.9">
+          <div style="color:#a6adc8">PALETTE</div>
+          <div>▮ bg <span style="color:#585b70">#1e1e2e</span></div>
+          <div>▮ fg <span style="color:#585b70">#cdd6f4</span></div>
+          <div>▮ kw <span style="color:#cba6f7">#cba6f7</span></div>
+          <div>▮ str <span style="color:#a6e3a1">#a6e3a1</span></div>
+          <div>▮ fn <span style="color:#89b4fa">#89b4fa</span></div>
+          <div>▮ cmt <span style="color:#6c7086">#6c7086</span></div>
+        </div>
+        <div style="flex:1;padding:8px;font-size:11px;line-height:1.7">
+          <div><span style="color:#6c7086">-- live preview</span></div>
+          <div><span style="color:#cba6f7">local</span> <span style="color:#cdd6f4">fn</span> = <span style="color:#cba6f7">function</span>()</div>
+          <div>&nbsp;&nbsp;<span style="color:#89b4fa">print</span>(<span style="color:#a6e3a1">"hello"</span>)</div>
+          <div><span style="color:#cba6f7">end</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">B — Top controls, big preview below</div>
+    <div class="mockup-body" style="background:#1e1e2e;color:#cdd6f4;font-family:monospace;padding:0">
+      <div style="background:#181825;padding:8px;font-size:10px">
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+          <span style="color:#a6adc8">Preset: Tokyo ▾</span><span style="margin-left:auto;color:#a6adc8">⬇ Copy Lua</span>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <span>▮bg</span><span>▮fg</span><span style="color:#cba6f7">▮kw</span><span style="color:#a6e3a1">▮str</span><span style="color:#89b4fa">▮fn</span><span style="color:#6c7086">▮cmt</span>
+        </div>
+      </div>
+      <div style="padding:10px;font-size:12px;line-height:1.8;min-height:170px">
+        <div><span style="color:#6c7086">-- live preview (full width)</span></div>
+        <div><span style="color:#cba6f7">local</span> <span style="color:#cdd6f4">fn</span> = <span style="color:#cba6f7">function</span>(<span style="color:#fab387">x</span>)</div>
+        <div>&nbsp;&nbsp;<span style="color:#89b4fa">print</span>(<span style="color:#a6e3a1">"hello "</span> .. <span style="color:#fab387">x</span>)</div>
+        <div><span style="color:#cba6f7">end</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content"><h3>Side panel + preview</h3><p>Palette swatches on the left, code preview on the right. Everything visible at once.</p></div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content"><h3>Top controls, big preview</h3><p>Color controls across the top, large code preview fills the rest. More room to read the preview.</p></div>
+  </div>
+</div>

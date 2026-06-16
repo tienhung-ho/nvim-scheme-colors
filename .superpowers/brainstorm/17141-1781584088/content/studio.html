@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>nvim Theme Studio</title>
+<style>
+  :root{
+    /* App chrome (not the previewed theme) */
+    --app-bg:#0f1115; --app-panel:#171a21; --app-border:#262b36;
+    --app-fg:#e6e9ef; --app-muted:#8b93a7; --app-accent:#7aa2f7;
+    /* Previewed theme vars — overwritten by JS */
+    --bg:#1e1e2e; --fg:#cdd6f4; --cl:#313244; --ln:#585b70; --sel:#45475a;
+    --stbg:#181825; --stfg:#a6adc8;
+    --cmt:#6c7086; --kw:#cba6f7; --str:#a6e3a1; --fn:#89b4fa; --ty:#f9e2af;
+    --cn:#fab387; --va:#f5c2e7; --op:#94e2d5; --er:#f38ba8;
+    --cmt-fs:italic; --kw-fw:bold;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--app-bg);color:var(--app-fg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:14px}
+  header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    padding:12px 18px;background:var(--app-panel);border-bottom:1px solid var(--app-border)}
+  header h1{font-size:15px;font-weight:600;margin:0;letter-spacing:.3px}
+  header h1 span{color:var(--app-accent)}
+  .grow{flex:1}
+  label.fld{display:flex;align-items:center;gap:6px;color:var(--app-muted);font-size:12px}
+  input[type=text],select{background:var(--app-bg);color:var(--app-fg);
+    border:1px solid var(--app-border);border-radius:6px;padding:5px 8px;font-size:13px}
+  input#themeName{width:130px;font-family:monospace}
+  .seg{display:flex;border:1px solid var(--app-border);border-radius:6px;overflow:hidden}
+  .seg button{background:var(--app-bg);color:var(--app-muted);border:0;padding:5px 12px;cursor:pointer;font-size:12px}
+  .seg button.on{background:var(--app-accent);color:#0b0e14;font-weight:600}
+  .btn{background:var(--app-accent);color:#0b0e14;border:0;border-radius:6px;
+    padding:7px 14px;font-weight:600;cursor:pointer;font-size:13px}
+  .btn.ghost{background:transparent;color:var(--app-fg);border:1px solid var(--app-border)}
+  .btn:active{transform:translateY(1px)}
+
+  .controls{padding:14px 18px;background:var(--app-panel);border-bottom:1px solid var(--app-border)}
+  .grouprow{display:flex;gap:28px;flex-wrap:wrap}
+  .group h2{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--app-muted);margin:0 0 8px}
+  .swatches{display:flex;gap:10px;flex-wrap:wrap}
+  .sw{display:flex;flex-direction:column;align-items:center;gap:4px;width:74px}
+  .sw input[type=color]{width:42px;height:42px;border:2px solid var(--app-border);
+    border-radius:10px;background:none;cursor:pointer;padding:0}
+  .sw input[type=color]::-webkit-color-swatch-wrapper{padding:2px}
+  .sw input[type=color]::-webkit-color-swatch{border:none;border-radius:7px}
+  .sw .nm{font-size:10.5px;color:var(--app-muted);text-align:center;line-height:1.2;height:24px;display:flex;align-items:center}
+  .sw input.hex{width:70px;font-family:monospace;font-size:11px;text-align:center;padding:2px 0}
+  .toggles{display:flex;gap:18px;margin-top:14px;color:var(--app-muted);font-size:12px}
+  .toggles label{display:flex;align-items:center;gap:6px;cursor:pointer}
+
+  /* ---- Preview editor ---- */
+  .previewWrap{padding:18px}
+  .tabs{display:flex;gap:6px;margin-bottom:10px}
+  .tabs button{background:var(--app-panel);color:var(--app-muted);border:1px solid var(--app-border);
+    border-radius:6px 6px 0 0;padding:6px 16px;cursor:pointer;font-family:monospace;font-size:12px}
+  .tabs button.on{background:var(--bg);color:var(--fg);border-bottom-color:var(--bg)}
+  .editor{background:var(--bg);border:1px solid var(--app-border);border-radius:0 8px 8px 8px;
+    overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+  .ed-body{display:flex;font-family:"SFMono-Regular",Menlo,Consolas,monospace;font-size:14px;line-height:1.7}
+  .gutter{padding:14px 12px 14px 16px;color:var(--ln);text-align:right;user-select:none;background:var(--bg)}
+  .gutter .cur{color:var(--fg)}
+  .code{padding:14px 18px;white-space:pre;overflow-x:auto;flex:1;color:var(--fg)}
+  .code .line{display:block;padding:0 6px;border-radius:3px}
+  .code .line.cur{background:var(--cl)}
+  .code .sel{background:var(--sel);border-radius:3px}
+  .statusline{background:var(--stbg);color:var(--stfg);font-family:monospace;font-size:12px;
+    padding:6px 14px;display:flex;gap:14px}
+  .statusline .mode{background:var(--fn);color:var(--bg);padding:0 8px;border-radius:3px;font-weight:700}
+  .statusline .grow2{flex:1}
+  /* token colors */
+  .t-cmt{color:var(--cmt);font-style:var(--cmt-fs)}
+  .t-kw{color:var(--kw);font-weight:var(--kw-fw)}
+  .t-str{color:var(--str)}
+  .t-fn{color:var(--fn)}
+  .t-ty{color:var(--ty)}
+  .t-cn{color:var(--cn)}
+  .t-va{color:var(--va)}
+  .t-op{color:var(--op)}
+  .t-er{color:var(--er)}
+
+  /* ---- Output modal ---- */
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:24px}
+  .modal.open{display:flex}
+  .modal-card{background:var(--app-panel);border:1px solid var(--app-border);border-radius:10px;
+    width:min(760px,100%);max-height:85vh;display:flex;flex-direction:column}
+  .modal-card header{border-radius:10px 10px 0 0}
+  .modal-card pre{margin:0;padding:16px 18px;overflow:auto;font-family:monospace;font-size:12.5px;
+    line-height:1.6;color:var(--app-fg);background:var(--app-bg);flex:1;border-radius:0 0 10px 10px}
+  .hint{color:var(--app-muted);font-size:12px;padding:0 18px}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--app-accent);
+    color:#0b0e14;padding:8px 18px;border-radius:8px;font-weight:600;opacity:0;transition:opacity .2s;pointer-events:none}
+  .toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<header>
+  <h1><span>nvim</span> Theme Studio</h1>
+  <label class="fld">Preset
+    <select id="preset"></select>
+  </label>
+  <label class="fld">Mode
+    <span class="seg" id="modeSeg">
+      <button data-mode="dark" class="on">dark</button>
+      <button data-mode="light">light</button>
+    </span>
+  </label>
+  <label class="fld">Name
+    <input type="text" id="themeName" value="mytheme">
+  </label>
+  <span class="grow"></span>
+  <button class="btn ghost" id="copyBtn">Copy Lua</button>
+  <button class="btn" id="dlBtn">Download .lua</button>
+</header>
+
+<section class="controls">
+  <div class="grouprow" id="grouprow"></div>
+  <div class="toggles">
+    <label><input type="checkbox" id="tglItalic" checked> Italic comments</label>
+    <label><input type="checkbox" id="tglBold" checked> Bold keywords</label>
+  </div>
+</section>
+
+<section class="previewWrap">
+  <div class="tabs" id="tabs">
+    <button data-lang="lua" class="on">lua</button>
+    <button data-lang="python">python</button>
+    <button data-lang="js">javascript</button>
+  </div>
+  <div class="editor">
+    <div class="ed-body">
+      <div class="gutter" id="gutter"></div>
+      <div class="code" id="code"></div>
+    </div>
+    <div class="statusline">
+      <span class="mode">NORMAL</span>
+      <span id="slName">mytheme.lua</span>
+      <span class="grow2"></span>
+      <span>utf-8</span><span>lua</span><span>12:1</span>
+    </div>
+  </div>
+</section>
+
+<!-- Output modal -->
+<div class="modal" id="modal">
+  <div class="modal-card">
+    <header>
+      <h1>Generated colorscheme</h1>
+      <span class="grow"></span>
+      <button class="btn ghost" id="copyBtn2">Copy</button>
+      <button class="btn ghost" id="closeBtn">Close</button>
+    </header>
+    <div class="hint" style="padding:10px 18px 4px">
+      Save as <code id="savePath">~/.config/nvim/colors/mytheme.lua</code>, then run <code>:colorscheme mytheme</code>
+    </div>
+    <pre id="luaOut"></pre>
+  </div>
+</div>
+
+<div class="toast" id="toast">Copied!</div>
+
+<script>
+/* ---------- palette definition ---------- */
+const PALETTE = [
+  {k:'bg',        v:'--bg',  label:'Background',   group:'Editor'},
+  {k:'fg',        v:'--fg',  label:'Foreground',   group:'Editor'},
+  {k:'cursorline',v:'--cl',  label:'Cursor line',  group:'Editor'},
+  {k:'linenr',    v:'--ln',  label:'Line numbers', group:'Editor'},
+  {k:'selection', v:'--sel', label:'Selection',    group:'Editor'},
+  {k:'statusbg',  v:'--stbg',label:'Status bg',    group:'Editor'},
+  {k:'statusfg',  v:'--stfg',label:'Status fg',    group:'Editor'},
+  {k:'comment',   v:'--cmt', label:'Comment',      group:'Syntax'},
+  {k:'keyword',   v:'--kw',  label:'Keyword',      group:'Syntax'},
+  {k:'string',    v:'--str', label:'String',       group:'Syntax'},
+  {k:'func',      v:'--fn',  label:'Function',     group:'Syntax'},
+  {k:'type',      v:'--ty',  label:'Type',         group:'Syntax'},
+  {k:'constant',  v:'--cn',  label:'Const / num',  group:'Syntax'},
+  {k:'variable',  v:'--va',  label:'Variable',     group:'Syntax'},
+  {k:'operator',  v:'--op',  label:'Operator',     group:'Syntax'},
+  {k:'error',     v:'--er',  label:'Error',        group:'Syntax'},
+];
+
+/* ---------- presets ---------- */
+const PRESETS = {
+  'Midnight (dark)':{mode:'dark',italic:true,bold:true,
+    bg:'#1e1e2e',fg:'#cdd6f4',cursorline:'#313244',linenr:'#585b70',selection:'#45475a',
+    statusbg:'#181825',statusfg:'#a6adc8',comment:'#6c7086',keyword:'#cba6f7',string:'#a6e3a1',
+    func:'#89b4fa',type:'#f9e2af',constant:'#fab387',variable:'#f5c2e7',operator:'#94e2d5',error:'#f38ba8'},
+  'Warm Retro (dark)':{mode:'dark',italic:true,bold:false,
+    bg:'#282828',fg:'#ebdbb2',cursorline:'#3c3836',linenr:'#7c6f64',selection:'#504945',
+    statusbg:'#1d2021',statusfg:'#a89984',comment:'#928374',keyword:'#fb4934',string:'#b8bb26',
+    func:'#8ec07c',type:'#fabd2f',constant:'#d3869b',variable:'#ebdbb2',operator:'#fe8019',error:'#fb4934'},
+  'Paper (light)':{mode:'light',italic:true,bold:true,
+    bg:'#ffffff',fg:'#24292e',cursorline:'#f0f3f6',linenr:'#bcc0c6',selection:'#c8e1ff',
+    statusbg:'#f0f3f6',statusfg:'#586069',comment:'#6a737d',keyword:'#d73a49',string:'#032f62',
+    func:'#6f42c1',type:'#005cc5',constant:'#005cc5',variable:'#24292e',operator:'#d73a49',error:'#cb2431'},
+  'High Contrast (dark)':{mode:'dark',italic:false,bold:true,
+    bg:'#000000',fg:'#ffffff',cursorline:'#1a1a1a',linenr:'#767676',selection:'#264f78',
+    statusbg:'#111111',statusfg:'#cccccc',comment:'#7f9f7f',keyword:'#ff5fff',string:'#5fff5f',
+    func:'#5fafff',type:'#ffff5f',constant:'#ff875f',variable:'#ffffff',operator:'#5fffff',error:'#ff5f5f'},
+};
+
+let state = {mode:'dark', italic:true, bold:true};
+
+/* ---------- code samples (token-tagged) ---------- */
+const SAMPLES = {
+  lua: [
+    ['<span class="t-cmt">-- Fibonacci sequence</span>'],
+    ['<span class="t-kw">local</span> <span class="t-kw">function</span> <span class="t-fn">fib</span>(<span class="t-va">n</span>)'],
+    ['  <span class="t-kw">if</span> <span class="t-va">n</span> <span class="t-op">&lt;</span> <span class="t-cn">2</span> <span class="t-kw">then</span>'],
+    ['    <span class="t-kw">return</span> <span class="t-va">n</span>'],
+    ['  <span class="t-kw">end</span>'],
+    ['  <span class="t-kw">return</span> <span class="t-fn">fib</span>(<span class="t-va">n</span> <span class="t-op">-</span> <span class="t-cn">1</span>) <span class="t-op">+</span> <span class="t-fn">fib</span>(<span class="t-va">n</span> <span class="t-op">-</span> <span class="t-cn">2</span>)'],
+    ['<span class="t-kw">end</span>'],
+    [''],
+    ['<span class="t-kw">local</span> <span class="t-va">result</span> <span class="t-op">=</span> <span class="t-fn">fib</span>(<span class="t-cn">10</span>)'],
+    ['<span class="t-fn">print</span>(<span class="t-str">"fib(10) = "</span> <span class="t-op">..</span> <span class="t-va">result</span>)'],
+  ],
+  python: [
+    ['<span class="t-cmt"># Quicksort implementation</span>'],
+    ['<span class="t-kw">def</span> <span class="t-fn">quicksort</span>(<span class="t-va">arr</span>):'],
+    ['    <span class="t-kw">if</span> <span class="t-fn">len</span>(<span class="t-va">arr</span>) <span class="t-op">&lt;=</span> <span class="t-cn">1</span>:'],
+    ['        <span class="t-kw">return</span> <span class="t-va">arr</span>'],
+    ['    <span class="t-va">pivot</span> <span class="t-op">=</span> <span class="t-va">arr</span>[<span class="t-fn">len</span>(<span class="t-va">arr</span>) <span class="t-op">//</span> <span class="t-cn">2</span>]'],
+    ['    <span class="t-va">left</span> <span class="t-op">=</span> [<span class="t-va">x</span> <span class="t-kw">for</span> <span class="t-va">x</span> <span class="t-kw">in</span> <span class="t-va">arr</span> <span class="t-kw">if</span> <span class="t-va">x</span> <span class="t-op">&lt;</span> <span class="t-va">pivot</span>]'],
+    ['    <span class="t-kw">return</span> <span class="t-fn">quicksort</span>(<span class="t-va">left</span>) <span class="t-op">+</span> [<span class="t-va">pivot</span>]'],
+    [''],
+    ['<span class="t-va">numbers</span> <span class="t-op">=</span> [<span class="t-cn">3</span>, <span class="t-cn">6</span>, <span class="t-cn">1</span>, <span class="t-cn">8</span>]'],
+    ['<span class="t-fn">print</span>(<span class="t-fn">quicksort</span>(<span class="t-va">numbers</span>))'],
+  ],
+  js: [
+    ['<span class="t-cmt">// Debounce a function</span>'],
+    ['<span class="t-kw">const</span> <span class="t-fn">debounce</span> <span class="t-op">=</span> (<span class="t-va">fn</span>, <span class="t-va">delay</span>) <span class="t-op">=&gt;</span> {'],
+    ['  <span class="t-kw">let</span> <span class="t-va">timer</span> <span class="t-op">=</span> <span class="t-cn">null</span>;'],
+    ['  <span class="t-kw">return</span> (<span class="t-op">...</span><span class="t-va">args</span>) <span class="t-op">=&gt;</span> {'],
+    ['    <span class="t-fn">clearTimeout</span>(<span class="t-va">timer</span>);'],
+    ['    <span class="t-va">timer</span> <span class="t-op">=</span> <span class="t-fn">setTimeout</span>(() <span class="t-op">=&gt;</span> <span class="t-fn">fn</span>(<span class="t-op">...</span><span class="t-va">args</span>), <span class="t-va">delay</span>);'],
+    ['  };'],
+    ['};'],
+    [''],
+    ['<span class="t-kw">const</span> <span class="t-va">log</span> <span class="t-op">=</span> <span class="t-fn">debounce</span>(<span class="t-ty">console</span>.<span class="t-fn">log</span>, <span class="t-cn">200</span>);'],
+  ],
+};
+let curLang = 'lua';
+const CUR_LINE = 8; /* zero-based index of the "current" (cursorline) row */
+
+/* ---------- build swatch controls ---------- */
+function buildControls(){
+  const groups = {};
+  PALETTE.forEach(p=>{ (groups[p.group]=groups[p.group]||[]).push(p); });
+  const row = document.getElementById('grouprow');
+  row.innerHTML = '';
+  for(const g of ['Editor','Syntax']){
+    const div = document.createElement('div');
+    div.className = 'group';
+    div.innerHTML = `<h2>${g}</h2><div class="swatches"></div>`;
+    const sw = div.querySelector('.swatches');
+    groups[g].forEach(p=>{
+      const cell = document.createElement('div');
+      cell.className = 'sw';
+      cell.innerHTML = `
+        <input type="color" id="col-${p.k}">
+        <input type="text" class="hex" id="hex-${p.k}" maxlength="7">
+        <div class="nm">${p.label}</div>`;
+      sw.appendChild(cell);
+      const col = cell.querySelector(`#col-${p.k}`);
+      const hex = cell.querySelector(`#hex-${p.k}`);
+      col.addEventListener('input', ()=>{ setColor(p, col.value); });
+      hex.addEventListener('change', ()=>{
+        let val = hex.value.trim();
+        if(/^#?[0-9a-fA-F]{6}$/.test(val)){ if(val[0]!=='#') val='#'+val; setColor(p, val.toLowerCase()); }
+        else { hex.value = state[p.k]; }
+      });
+    });
+    row.appendChild(div);
+  }
+}
+
+function setColor(p, val){
+  state[p.k] = val;
+  document.documentElement.style.setProperty(p.v, val);
+  const col = document.getElementById('col-'+p.k);
+  const hex = document.getElementById('hex-'+p.k);
+  if(col) col.value = val;
+  if(hex) hex.value = val;
+}
+
+/* ---------- apply preset ---------- */
+function applyPreset(name){
+  const p = PRESETS[name];
+  if(!p) return;
+  state.mode = p.mode; state.italic = p.italic; state.bold = p.bold;
+  PALETTE.forEach(item=> setColor(item, p[item.k]));
+  document.getElementById('tglItalic').checked = p.italic;
+  document.getElementById('tglBold').checked = p.bold;
+  setStyleToggles();
+  setMode(p.mode);
+}
+
+function setStyleToggles(){
+  document.documentElement.style.setProperty('--cmt-fs', state.italic ? 'italic' : 'normal');
+  document.documentElement.style.setProperty('--kw-fw',  state.bold ? 'bold' : 'normal');
+}
+
+function setMode(mode){
+  state.mode = mode;
+  document.querySelectorAll('#modeSeg button').forEach(b=>
+    b.classList.toggle('on', b.dataset.mode===mode));
+}
+
+/* ---------- render preview ---------- */
+function renderPreview(){
+  const lines = SAMPLES[curLang];
+  const gutter = document.getElementById('gutter');
+  const code = document.getElementById('code');
+  gutter.innerHTML = lines.map((_,i)=>
+    `<div class="${i===CUR_LINE?'cur':''}">${i+1}</div>`).join('');
+  code.innerHTML = lines.map((l,i)=>
+    `<span class="line ${i===CUR_LINE?'cur':''}">${l[0]||' '}</span>`).join('');
+}
+
+/* ---------- Lua generation ---------- */
+function genLua(){
+  const name = (document.getElementById('themeName').value || 'mytheme').replace(/[^a-zA-Z0-9_-]/g,'');
+  const c = state;
+  const it = c.italic ? ', italic = true' : '';
+  const bd = c.bold ? ', bold = true' : '';
+  const L = [];
+  L.push(`-- ${name}.lua  —  generated by nvim Theme Studio`);
+  L.push(`-- Save to ~/.config/nvim/colors/${name}.lua, then :colorscheme ${name}`);
+  L.push(``);
+  L.push(`vim.cmd("highlight clear")`);
+  L.push(`if vim.fn.exists("syntax_on") == 1 then vim.cmd("syntax reset") end`);
+  L.push(`vim.o.background = "${c.mode}"`);
+  L.push(`vim.g.colors_name = "${name}"`);
+  L.push(``);
+  L.push(`local set = vim.api.nvim_set_hl`);
+  L.push(``);
+  L.push(`-- Editor UI`);
+  L.push(`set(0, "Normal",       { fg = "${c.fg}", bg = "${c.bg}" })`);
+  L.push(`set(0, "LineNr",       { fg = "${c.linenr}", bg = "${c.bg}" })`);
+  L.push(`set(0, "CursorLine",   { bg = "${c.cursorline}" })`);
+  L.push(`set(0, "CursorLineNr", { fg = "${c.fg}", bg = "${c.cursorline}", bold = true })`);
+  L.push(`set(0, "Visual",       { bg = "${c.selection}" })`);
+  L.push(`set(0, "StatusLine",   { fg = "${c.statusfg}", bg = "${c.statusbg}" })`);
+  L.push(`set(0, "StatusLineNC", { fg = "${c.linenr}", bg = "${c.statusbg}" })`);
+  L.push(`set(0, "Pmenu",        { fg = "${c.fg}", bg = "${c.statusbg}" })`);
+  L.push(`set(0, "PmenuSel",     { fg = "${c.bg}", bg = "${c.func}" })`);
+  L.push(`set(0, "VertSplit",    { fg = "${c.statusbg}" })`);
+  L.push(`set(0, "SignColumn",   { bg = "${c.bg}" })`);
+  L.push(`set(0, "ColorColumn",  { bg = "${c.cursorline}" })`);
+  L.push(`set(0, "Search",       { fg = "${c.bg}", bg = "${c.type}" })`);
+  L.push(`set(0, "NonText",      { fg = "${c.linenr}" })`);
+  L.push(`set(0, "ErrorMsg",     { fg = "${c.error}" })`);
+  L.push(`set(0, "WarningMsg",   { fg = "${c.constant}" })`);
+  L.push(``);
+  L.push(`-- Syntax`);
+  L.push(`set(0, "Comment",     { fg = "${c.comment}"${it} })`);
+  L.push(`set(0, "Keyword",     { fg = "${c.keyword}"${bd} })`);
+  L.push(`set(0, "Statement",   { fg = "${c.keyword}" })`);
+  L.push(`set(0, "Conditional", { fg = "${c.keyword}" })`);
+  L.push(`set(0, "Repeat",      { fg = "${c.keyword}" })`);
+  L.push(`set(0, "PreProc",     { fg = "${c.keyword}" })`);
+  L.push(`set(0, "Operator",    { fg = "${c.operator}" })`);
+  L.push(`set(0, "String",      { fg = "${c.string}" })`);
+  L.push(`set(0, "Character",   { fg = "${c.string}" })`);
+  L.push(`set(0, "Function",    { fg = "${c.func}" })`);
+  L.push(`set(0, "Identifier",  { fg = "${c.variable}" })`);
+  L.push(`set(0, "Type",        { fg = "${c.type}" })`);
+  L.push(`set(0, "Constant",    { fg = "${c.constant}" })`);
+  L.push(`set(0, "Number",      { fg = "${c.constant}" })`);
+  L.push(`set(0, "Boolean",     { fg = "${c.constant}" })`);
+  L.push(`set(0, "Float",       { fg = "${c.constant}" })`);
+  L.push(`set(0, "Special",     { fg = "${c.operator}" })`);
+  L.push(`set(0, "Error",       { fg = "${c.error}" })`);
+  L.push(`set(0, "Todo",        { fg = "${c.bg}", bg = "${c.type}" })`);
+  L.push(``);
+  L.push(`-- Treesitter`);
+  const ts = [
+    ['@comment','Comment'],['@keyword','Keyword'],['@keyword.function','Keyword'],
+    ['@conditional','Conditional'],['@repeat','Repeat'],['@operator','Operator'],
+    ['@string','String'],['@function','Function'],['@function.call','Function'],
+    ['@variable','Identifier'],['@variable.parameter','Identifier'],['@type','Type'],
+    ['@constant','Constant'],['@number','Number'],['@boolean','Boolean'],
+    ['@punctuation.delimiter','Operator'],['@punctuation.bracket','Normal'],
+  ];
+  ts.forEach(([a,b])=> L.push(`set(0, "${a}", { link = "${b}" })`));
+  return L.join('\n');
+}
+
+/* ---------- modal + actions ---------- */
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1400);
+}
+function copyText(txt){
+  navigator.clipboard.writeText(txt).then(()=>showToast('Copied!'),
+    ()=>{ /* fallback */ const ta=document.createElement('textarea');ta.value=txt;
+      document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();showToast('Copied!'); });
+}
+function openModal(){
+  const name = (document.getElementById('themeName').value||'mytheme').replace(/[^a-zA-Z0-9_-]/g,'');
+  document.getElementById('savePath').textContent = `~/.config/nvim/colors/${name}.lua`;
+  document.getElementById('luaOut').textContent = genLua();
+  document.getElementById('modal').classList.add('open');
+}
+
+/* ---------- wire up ---------- */
+function init(){
+  buildControls();
+  // preset dropdown
+  const sel = document.getElementById('preset');
+  Object.keys(PRESETS).forEach(n=>{
+    const o = document.createElement('option'); o.value=n; o.textContent=n; sel.appendChild(o);
+  });
+  sel.addEventListener('change', ()=>applyPreset(sel.value));
+
+  // mode
+  document.querySelectorAll('#modeSeg button').forEach(b=>
+    b.addEventListener('click', ()=>setMode(b.dataset.mode)));
+
+  // toggles
+  document.getElementById('tglItalic').addEventListener('change', e=>{
+    state.italic = e.target.checked; setStyleToggles(); });
+  document.getElementById('tglBold').addEventListener('change', e=>{
+    state.bold = e.target.checked; setStyleToggles(); });
+
+  // language tabs
+  document.querySelectorAll('#tabs button').forEach(b=>
+    b.addEventListener('click', ()=>{
+      curLang = b.dataset.lang;
+      document.querySelectorAll('#tabs button').forEach(x=>x.classList.toggle('on', x===b));
+      document.querySelector('.statusline span#slName').textContent =
+        (document.getElementById('themeName').value||'mytheme') + '.' + (curLang==='js'?'js':curLang==='python'?'py':'lua');
+      renderPreview();
+    }));
+
+  // name field updates status line
+  document.getElementById('themeName').addEventListener('input', e=>{
+    const ext = curLang==='js'?'js':curLang==='python'?'py':'lua';
+    document.getElementById('slName').textContent = (e.target.value||'mytheme')+'.'+ext;
+  });
+
+  // buttons
+  document.getElementById('copyBtn').addEventListener('click', ()=>copyText(genLua()));
+  document.getElementById('dlBtn').addEventListener('click', ()=>{
+    const name=(document.getElementById('themeName').value||'mytheme').replace(/[^a-zA-Z0-9_-]/g,'');
+    const blob=new Blob([genLua()],{type:'text/plain'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name+'.lua';
+    a.click(); URL.revokeObjectURL(a.href); showToast('Downloaded '+name+'.lua');
+  });
+  document.getElementById('copyBtn2').addEventListener('click', ()=>copyText(genLua()));
+  document.getElementById('closeBtn').addEventListener('click', ()=>
+    document.getElementById('modal').classList.remove('open'));
+  document.getElementById('modal').addEventListener('click', e=>{
+    if(e.target.id==='modal') e.target.classList.remove('open'); });
+
+  applyPreset('Midnight (dark)');
+  renderPreview();
+}
+init();
+</script>
+</body>
+</html>
